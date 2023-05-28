@@ -8,6 +8,8 @@ import LoginPage from '../pages/LoginPage';
 
 import { getUserLogged, putAccessToken } from '../utils/api';
 
+import { LocaleProvider } from '../contexts/LocaleContext';
+
 class ContactApp extends React.Component {
   constructor(props) {
     super(props);
@@ -15,6 +17,24 @@ class ContactApp extends React.Component {
     this.state = {
       authedUser: null,
       initializing: true,
+      localeContext: {
+        locale: localStorage.getItem('locale') || 'id',
+        toggleLocale: () => {
+          this.setState((prevState) => {
+            const newLocale =
+              prevState.localeContext.locale === 'id' ? 'en' : 'id';
+
+            localStorage.setItem('locale', newLocale);
+
+            return {
+              localeContext: {
+                ...prevState.localeContext,
+                locale: newLocale,
+              },
+            };
+          });
+        },
+      },
     };
 
     this.onLoginSuccess = this.onLoginSuccess.bind(this);
@@ -57,39 +77,47 @@ class ContactApp extends React.Component {
 
     if (this.state.authedUser === null) {
       return (
-        <div className='contact-app'>
-          <header className='contact-app__header'>
-            <h1>Aplikasi Kontak</h1>
-          </header>
-          <main>
-            <Routes>
-              <Route
-                path='/*'
-                element={<LoginPage loginSuccess={this.onLoginSuccess} />}
-              />
-              <Route path='/register' element={<RegisterPage />} />
-            </Routes>
-          </main>
-        </div>
+        <LocaleProvider value={this.state.localeContext}>
+          <div className='contact-app'>
+            <header className='contact-app__header'>
+              <h1>Aplikasi Kontak</h1>
+            </header>
+            <main>
+              <Routes>
+                <Route
+                  path='/*'
+                  element={<LoginPage loginSuccess={this.onLoginSuccess} />}
+                />
+                <Route path='/register' element={<RegisterPage />} />
+              </Routes>
+            </main>
+          </div>
+        </LocaleProvider>
       );
     }
 
     return (
-      <div className='contact-app'>
-        <header className='contact-app__header'>
-          <h1>Aplikasi Kontak</h1>
-          <Navigation
-            logout={this.onLogout}
-            name={this.state.authedUser.name}
-          />
-        </header>
-        <main>
-          <Routes>
-            <Route path='/' element={<HomePage />} />
-            <Route path='/add' element={<AddPage />} />
-          </Routes>
-        </main>
-      </div>
+      <LocaleProvider value={this.state.localeContext}>
+        <div className='contact-app'>
+          <header className='contact-app__header'>
+            <h1>
+              {this.state.localeContext.locale === 'id'
+                ? 'Aplikasi Kontak'
+                : 'Contacts App'}
+            </h1>
+            <Navigation
+              logout={this.onLogout}
+              name={this.state.authedUser.name}
+            />
+          </header>
+          <main>
+            <Routes>
+              <Route path='/' element={<HomePage />} />
+              <Route path='/add' element={<AddPage />} />
+            </Routes>
+          </main>
+        </div>
+      </LocaleProvider>
     );
   }
 }
